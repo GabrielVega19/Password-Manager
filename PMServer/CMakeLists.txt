@@ -1,20 +1,16 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.28)
 project(PMServer)
 
-include(CTest)
-enable_testing()
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_include_directories(${PROJECT_NAME} 
-    PUBLIC
-        PMLibrary
-)
-target_link_libraries(${PROJECT_NAME}
-    PUBLIC 
-        PMLibrary
+target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            PMNetworking
 )
 
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+            PMNetworking
+)

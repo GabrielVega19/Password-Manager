@@ -1,20 +1,18 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.28)
 project(PMClient)
 
-include(CTest)
-enable_testing()
+set(CMAKE_CXX_STANDARD 20)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+        ../PMNetworking/include/PMNetworking/Base.h
+        ../PMNetworking/src/Base.cpp)
 
-target_include_directories(${PROJECT_NAME} 
-    PUBLIC
-        PMLibrary
+target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            PMNetworking
 )
+
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC 
-        PMLibrary
+        PUBLIC
+            PMNetworking
 )
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)

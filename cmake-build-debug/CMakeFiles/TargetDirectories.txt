@@ -1,0 +1,11 @@
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMNetworking/CMakeFiles/PMNetworking.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMNetworking/CMakeFiles/edit_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMNetworking/CMakeFiles/rebuild_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMClient/CMakeFiles/PMClient.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMClient/CMakeFiles/edit_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMClient/CMakeFiles/rebuild_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMServer/CMakeFiles/PMServer.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMServer/CMakeFiles/edit_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/cmake-build-debug/PMServer/CMakeFiles/rebuild_cache.dir

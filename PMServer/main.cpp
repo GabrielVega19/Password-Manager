@@ -1,100 +1,35 @@
-#include <iostream>
-#include <PMLibrary/Server.h>
 #include <boost/asio.hpp>
+#include <iostream>
+#include "C:/Users/jeise/source/cryptopp890/cryptlib.h"
+#include "C:/Users/jeise/source/cryptopp890/sha.h"
+#include <algorithm>
 
+using boost::asio::ip::tcp;
 
-int main(int, char**){
-    PM::TCPServer server(6969);
+int main(int argc, char* argv[]) {
+    CryptoPP::SHA1 hash;
+    std::cout << "Name: " << hash.AlgorithmName() << std::endl;
+    std::cout << "Digest size: " << hash.DigestSize() << std::endl;
+    std::cout << "Block size: " << hash.BlockSize() << std::endl;
+    try {
+        boost::asio::io_context io_context;
 
-    server.onJoin = [](PM::TCPConnection::TCPPointer tcpConn){
-        std::cout << "user has joined the server: " << tcpConn->getUsername() << std::endl;
-    };
-
-    server.onLeave = [](PM::TCPConnection::TCPPointer tcpConn){
-        std::cout << "user has left the server: " << tcpConn->getUsername() << std::endl;
-    };
-
-    server.onClientMsg = [](const std::string& msg, PM::TCPConnection::TCPPointer tcpConn){
-        std::cout << "user has send the message: " << msg << std::endl;
-        tcpConn->send(msg);
-    };
-
-    server.run();
-    
-    return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*  try {
-        io_context ioContext;
-
-        tcp::acceptor acceptor(ioContext, tcp::endpoint(tcp::v4(), 6969));
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 1337));
 
         while(true) {
-            cout << "Accepting connections on port 6969." << endl;
+            std::cout << "Accepting connections on port 1337:\n";
 
-            tcp::socket socket(ioContext);
+            tcp::socket socket(io_context);
             acceptor.accept(socket);
 
-            cout << "client connected! Sending message." << endl;
-            error_code errorCode;
+            std::cout << "Client connected - Sending message\n";
+            std::string hello_message = "Hello client\n";
+            boost::system::error_code error;
 
-            write(socket, buffer("Hello client. Change to something.\n"), errorCode);
+            boost::asio::write(socket, boost::asio::buffer(hello_message), error);
         }
-    } catch (std::exception& e){
-        cerr << e.what() << endl;
-    }*/
+    } catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
+    }
+    return 0;
+}

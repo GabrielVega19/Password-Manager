@@ -1,0 +1,3 @@
+C:/Users/jeise/CLionProjects/PasswordManager/PMNetworking/cmake-build-debug/CMakeFiles/PMNetworking.dir
+C:/Users/jeise/CLionProjects/PasswordManager/PMNetworking/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/jeise/CLionProjects/PasswordManager/PMNetworking/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,49 +1,37 @@
-#include <iostream>
-#include <PMLibrary/Server.h>
 #include <boost/asio.hpp>
 #include <array>
-
-using boost::asio::io_context;
+#include <iostream>
 using boost::asio::ip::tcp;
-using boost::asio::connect;
-using boost::system::error_code;
-using std::array;
-using boost::asio::buffer;
-using boost::asio::error::eof;
-using std::endl;
-using std::cout;
-using std::cerr;
 
-int main(int argc, char* argv[]){
-    try{
-        io_context ioContext;
+int main(int argc, char* argv[])
+{
+    try {
+        boost::asio::io_context io_context;
 
-        tcp::resolver resolver { ioContext };
-        auto endpoints = resolver.resolve("localhost", "6969");
+        tcp::resolver resolver { io_context };
 
-        tcp::socket socket {ioContext};
-        connect(socket, endpoints);
+        auto endpoints = resolver.resolve("127.0.0.1", "1337");
 
-        while(true){
-            array<char, 128> buf {};
-            error_code error;
+        tcp::socket socket{ io_context };
+        boost::asio::connect(socket, endpoints);
 
-            size_t len = socket.read_some(buffer(buf), error);
+        while (true) {
+            std::array<char, 128> buf {};
+            boost::system::error_code error;
 
-            if (error == eof){
+            size_t len = socket.read_some(boost::asio::buffer(buf), error);
+
+            if(error == boost::asio::error::eof) {
                 break;
-            } else if (error){
+                // ReSharper disable once CppRedundantElseKeywordInsideCompoundStatement
+            } else if(error){
                 throw boost::system::system_error(error);
             }
 
-            cout.write(buf.data(), len);
+            std::cout.write(buf.data(), len);
         }
-
-    } catch (std::exception& e){
-        cerr << e.what() << endl;
+    } catch(std::exception& e) {
+        std::cerr << e.what() << std::endl;
     }
-
-
-
     return 0;
 }
