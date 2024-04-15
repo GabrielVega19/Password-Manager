@@ -9,7 +9,6 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
 find_package(Boost 1.84.0 REQUIRED)
-find_package(mariadbclientpp REQUIRED)
 
 file(GLOB SOURCES src/* src/*/* src/*/*/*)
 add_library(${PROJECT_NAME} ${SOURCES})
@@ -25,5 +24,5 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${Boost_LIBRARIES}
-        mariadbclientpp::mariadbclientpp
+        libmariadbcpp.so
 )

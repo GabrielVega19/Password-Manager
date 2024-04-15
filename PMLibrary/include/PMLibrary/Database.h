@@ -1,12 +1,17 @@
 #pragma once
-#include <mariadb++/account.hpp>
+#include <iostream>
+#include <mariadb/conncpp.hpp>
+#include <memory>
 
 namespace PM{
+    using std::cout;
+    using std::endl;
+    using std::string;
+
     class DBConnection{
         public:
-
+            DBConnection();
         private:
-            // mariadb::account_ref acc = mariadb::account::create();
-
+           
     };
 }

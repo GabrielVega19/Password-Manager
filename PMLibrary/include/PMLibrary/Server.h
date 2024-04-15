@@ -6,6 +6,8 @@
 #include <queue>
 #include <unordered_set>
 #include <boost/asio.hpp>
+#include <PMLibrary/Database.h>
+
 
 namespace PM{
     using boost::asio::ip::tcp;
@@ -63,7 +65,8 @@ namespace PM{
             tcp::acceptor _acceptor; 
             std::optional<tcp::socket> _socket;
             std::unordered_set<TCPConnection::TCPPointer> _connections {};
-
+            DBConnection _dbConnection;
+            
             void startAccept();
     };
 

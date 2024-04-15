@@ -2,8 +2,8 @@
 #include <iostream>
 
 namespace PM{
-    TCPServer::TCPServer(int port): _port(port), _acceptor(_ioContext, tcp::endpoint(tcp::v4(), _port)) {
-
+    TCPServer::TCPServer(int port): _dbConnection(), _port(port), _acceptor(_ioContext, tcp::endpoint(tcp::v4(), _port)) {
+        
     }
 
     int TCPServer::run(){
