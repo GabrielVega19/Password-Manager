@@ -5,7 +5,9 @@
 
 
 int main(int, char**){
+    std::cout << "creating server" << std::endl;
     PM::TCPServer server(6969);
+    std::cout << "created server" << std::endl;
 
     server.onJoin = [](PM::TCPConnection::TCPPointer tcpConn){
         std::cout << "user has joined the server: " << tcpConn->getUsername() << std::endl;
@@ -19,7 +21,8 @@ int main(int, char**){
         std::cout << "user has send the message: " << msg << std::endl;
         tcpConn->send(msg);
     };
-
+    
+    std::cout << "running server" << std::endl;
     server.run();
     
     return 0;

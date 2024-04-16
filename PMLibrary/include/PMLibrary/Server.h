@@ -14,15 +14,17 @@ namespace PM{
     using boost::system::error_code;
     using std::cout;
     using std::endl;
+    using std::string;
     using msgHandler = std::function<void(std::string)>;
     using errHandler = std::function<void()>;
 
     class TCPConnection : public std::enable_shared_from_this<TCPConnection>{
         public:
             using TCPPointer = std::shared_ptr<TCPConnection>;
+            using DBPointer = std::shared_ptr<DBConnection>;
 
-            static TCPPointer create(tcp::socket&& socket){
-                return TCPPointer(new TCPConnection(std::move(socket)));
+            static TCPPointer create(tcp::socket&& socket, DBPointer dbConnection){
+                return TCPPointer(new TCPConnection(std::move(socket), dbConnection));
             }
             
             tcp::socket& socket(){
@@ -38,12 +40,15 @@ namespace PM{
             boost::asio::streambuf _streamBuff {65536};
             msgHandler _msgHandler;
             errHandler _errHandler;
+            DBPointer _dbConnection;
 
-            explicit TCPConnection(tcp::socket&& socket);
-            void asyncRead();
+            explicit TCPConnection(tcp::socket&& socket, DBPointer dbConnection);
+            string syncRead();
+            void serviceClient();
             void onRead(error_code ec, size_t bLen);
             void asyncWrite();
             void onWrite(error_code ec, size_t bLen);
+            string authenticateUser();
     };
 
     class TCPServer{
@@ -65,7 +70,7 @@ namespace PM{
             tcp::acceptor _acceptor; 
             std::optional<tcp::socket> _socket;
             std::unordered_set<TCPConnection::TCPPointer> _connections {};
-            DBConnection _dbConnection;
+            std::shared_ptr<DBConnection> _dbConnection;
             
             void startAccept();
     };
