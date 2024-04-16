@@ -7,7 +7,6 @@
 int main(int, char**){
     std::cout << "creating server" << std::endl;
     PM::TCPServer server(6969);
-    std::cout << "created server" << std::endl;
 
     server.onJoin = [](PM::TCPConnection::TCPPointer tcpConn){
         std::cout << "user has joined the server: " << tcpConn->getUsername() << std::endl;

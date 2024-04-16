@@ -15,7 +15,7 @@ namespace PM{
         public:
             DBConnection();
             userRecord queryUser(string username);
-
+            void registerUser(string username, string password);
         private:
             std::shared_ptr<sql::Driver> _driver;
             std::shared_ptr<sql::Connection> _dbConn;

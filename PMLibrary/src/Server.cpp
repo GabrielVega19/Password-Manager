@@ -68,13 +68,29 @@ namespace PM{
         if (authenticationStatus == "true"){
             //if authenticated service client
             send("Authentication successful.");
+            cout << "user authenticated" << endl;
             serviceClient();
         }else if (authenticationStatus == "register"){
             // if user not registered in db then register them in the db 
-            send("Please enter your password again to register yourself in the system.");
+            cout << "Registering User" << endl;
+            send("Please enter your password again to register yourself in the system. \n");
+            string repeatPassword = syncRead();
+            
+            if (repeatPassword == _password){
+                registerUser();
+                cout << "Registered User." << endl;
+                serviceClient();
+            }else{
+                send("Passwords dont match please connect to the server and try again.");
+                _socket.close();
+                _errHandler();
+                return;
+            }
+
         }else if (authenticationStatus == "false"){
             //dissconect the user for failing to authenticate to a registered user
             send("Authentication failed.");
+            cout << "Authentication Failed." << endl;
             _socket.close();
             _errHandler();
             return;
@@ -87,9 +103,15 @@ namespace PM{
 
     }
 
+    void TCPConnection::registerUser(){
+        _dbConnection->registerUser(_username, _password);
+    }
+
     string TCPConnection::authenticateUser(){
         string userUsername = syncRead();
         string userPassword = syncRead();
+        _username = userUsername;
+        _password = userPassword;
 
         userRecord result = _dbConnection->queryUser(userUsername);
         if (result.first){
@@ -145,18 +167,11 @@ namespace PM{
     }
     
     void TCPConnection::asyncWrite(){
-        boost::asio::async_write(_socket, boost::asio::buffer(_outgoingMsgs.front()), [self=shared_from_this(), this](error_code ec, size_t bLen){            
-            self->onWrite(ec, bLen);
-        });
+        boost::asio::write(_socket, boost::asio::buffer(_outgoingMsgs.front()));
+        onWrite();
     }
 
-    void TCPConnection::onWrite(error_code ec, size_t bLen){
-        if (ec){
-            _socket.close();
-            _errHandler();
-            return;
-        }
-
+    void TCPConnection::onWrite(){
         _outgoingMsgs.pop();
         if (!_outgoingMsgs.empty()){
             asyncWrite();

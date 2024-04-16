@@ -35,7 +35,9 @@ namespace PM{
             inline const std::string& getUsername() const { return _name; }
         private:
             tcp::socket _socket;
-            std::string _name; 
+            std::string _name;
+            std::string _username;
+            std::string _password; 
             std::queue<std::string> _outgoingMsgs;
             boost::asio::streambuf _streamBuff {65536};
             msgHandler _msgHandler;
@@ -45,9 +47,10 @@ namespace PM{
             explicit TCPConnection(tcp::socket&& socket, DBPointer dbConnection);
             string syncRead();
             void serviceClient();
+            void registerUser();
             void onRead(error_code ec, size_t bLen);
             void asyncWrite();
-            void onWrite(error_code ec, size_t bLen);
+            void onWrite();
             string authenticateUser();
     };
 
