@@ -3,6 +3,9 @@
 #include "C:/Users/jeise/source/cryptopp890/cryptlib.h"
 #include "C:/Users/jeise/source/cryptopp890/sha.h"
 #include <algorithm>
+#include <C:/Users/jeise/source/cryptopp890/filters.h>
+#include <C:/Users/jeise/source/cryptopp890/files.h>
+#include <C:/Users/jeise/source/cryptopp890/hex.h>
 
 using boost::asio::ip::tcp;
 
