@@ -67,14 +67,14 @@ namespace PM{
         string authenticationStatus = authenticateUser();
         if (authenticationStatus == "true"){
             //if authenticated service client
-            cout << "passed authentication" << endl;
+            send("Authentication successful.");
             serviceClient();
         }else if (authenticationStatus == "register"){
             // if user not registered in db then register them in the db 
-            cout << "need to register" << endl;
+            send("Please enter your password again to register yourself in the system.");
         }else if (authenticationStatus == "false"){
             //dissconect the user for failing to authenticate to a registered user
-            cout << "failed authentication" << endl;
+            send("Authentication failed.");
             _socket.close();
             _errHandler();
             return;

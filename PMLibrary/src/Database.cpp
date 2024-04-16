@@ -4,7 +4,7 @@ namespace PM{
     DBConnection::DBConnection(){
         _driver = std::shared_ptr<sql::Driver>(sql::mariadb::get_driver_instance());
         sql::SQLString url("jdbc:mariadb://localhost:3306/insertdbname");
-        sql::Properties properties({{"user", "insertuser"}, {"password", "insertpassword"}});
+        sql::Properties properties({{"user", "inseruser"}, {"password", "insertpassword"}});
         _dbConn = std::shared_ptr<sql::Connection>(_driver->connect(url, properties));
     }
 
