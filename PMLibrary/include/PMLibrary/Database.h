@@ -16,6 +16,8 @@ namespace PM{
             DBConnection();
             userRecord queryUser(string username);
             void registerUser(string username, string password);
+            std::vector<std::vector<std::string>> fetchPasswords(string username);
+            void addPassword(string user, string website, string  webUsername, string webPassword);
         private:
             std::shared_ptr<sql::Driver> _driver;
             std::shared_ptr<sql::Connection> _dbConn;

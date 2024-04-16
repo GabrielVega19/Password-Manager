@@ -67,18 +67,19 @@ namespace PM{
         string authenticationStatus = authenticateUser();
         if (authenticationStatus == "true"){
             //if authenticated service client
-            send("Authentication successful.");
             cout << "user authenticated" << endl;
+            send("Authentication Successful. Welcome to the Secure Password Manager.\n");
             serviceClient();
         }else if (authenticationStatus == "register"){
             // if user not registered in db then register them in the db 
             cout << "Registering User" << endl;
-            send("Please enter your password again to register yourself in the system. \n");
+            send("Please enter your password again to register yourself in the system.\n\n");
             string repeatPassword = syncRead();
             
             if (repeatPassword == _password){
                 registerUser();
                 cout << "Registered User." << endl;
+                send("Registration Successful. Welcome to the Secure Password Manager.\n");
                 serviceClient();
             }else{
                 send("Passwords dont match please connect to the server and try again.");
@@ -138,6 +139,8 @@ namespace PM{
 
 
     void TCPConnection::serviceClient(){
+        send("- Type 1 and then enter to add a password.\n- Type 2 and then enter to fetch passwords.\n\n");
+
         boost::asio::async_read_until(_socket, _streamBuff, "\n", [self=shared_from_this(), this](error_code ec, size_t bLen){            
             self->onRead(ec, bLen);
         });
@@ -151,9 +154,35 @@ namespace PM{
         }
 
         std::stringstream msg;
-        msg << _name << ": " << std::istream(&_streamBuff).rdbuf();
+        msg << std::istream(&_streamBuff).rdbuf();
+        std::string stringifyMsg = msg.str();
+        stringifyMsg = stringifyMsg.substr(0, (stringifyMsg.size() - 2));
+        _msgHandler(_username + ": " + stringifyMsg);
 
-        _msgHandler(msg.str());
+        if (stringifyMsg == "1"){ 
+            send("Website Link (ex. google.com): "); 
+            string website = syncRead();
+            send("Username (ex. gabriel@gmail.com): "); 
+            string webUsername = syncRead();
+            send("Password (ex. mypassword): ");
+            string webPassword = syncRead();
+
+            _dbConnection->addPassword(_username, website, webUsername, webPassword);
+            send("Password Successfully registered.\n");
+
+        } else if(stringifyMsg == "2"){
+            std::vector<std::vector<std::string>> passwords = _dbConnection->fetchPasswords(_username);
+            for (auto entry : passwords){
+                std::stringstream msgStream;
+                msgStream << "-" << entry[1] << std::endl; 
+                msgStream << "\t-username: " << entry[2] << std::endl;
+                msgStream << "\t-password: " << entry[3] << std::endl;
+                send(msgStream.str()); 
+            }
+        }else{
+            send("Invalid Option Selected.\n");
+        }
+
         serviceClient();
     };
 
