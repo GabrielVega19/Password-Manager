@@ -3,8 +3,8 @@
 namespace PM{
     DBConnection::DBConnection(){
         _driver = std::shared_ptr<sql::Driver>(sql::mariadb::get_driver_instance());
-        sql::SQLString url("jdbc:mariadb://localhost:3306/insertdbname");
-        sql::Properties properties({{"user", "insertusername"}, {"password", "insertpassword"}});
+        sql::SQLString url("jdbc:mariadb://localhost:3306/insertdatabasename");
+        sql::Properties properties({{"user", "insertuser"}, {"password", "insertpassword"}});
         _dbConn = std::shared_ptr<sql::Connection>(_driver->connect(url, properties));
     }
 
@@ -14,24 +14,39 @@ namespace PM{
             stmnt->setString(1, username);
             sql::ResultSet *res = stmnt->executeQuery();
             if (res->next()) {
-                userRecord result(true, res->getString(2));
+                std::stringstream ss;
+                ss << res->getString(2);
+
+                std::stringstream ss2;
+                ss2 << res->getString(3);
+                userRecord result;
+                result.push_back("true");
+                result.push_back(ss.str());
+                result.push_back(ss2.str());
                 return result;
             }
-            userRecord result(false, "");
+            userRecord result{"false"};
             return result;
         }
         catch(sql::SQLException& e){
             std::cerr << "Error querying db while authenticating user: " << e.what() << std::endl;
-            userRecord result(false, "");
+            userRecord result{"false"};
             return result;
         }        
     }
 
-    void DBConnection::registerUser(string username, string password){
+    void DBConnection::registerUser(string username, string password, string salt){
         try {
-            sqlQuery stmnt(_dbConn->prepareStatement("INSERT INTO users VALUES(?, ?);"));
+            sqlQuery stmnt(_dbConn->prepareStatement("INSERT INTO users VALUES(?, ?, ?);"));
             stmnt->setString(1, username);
-            stmnt->setString(2, password);
+            
+            std::stringstream ss;
+            ss << password;
+            stmnt->setBlob(2, &ss);
+            
+            std::stringstream ss2;
+            ss2 << salt;
+            stmnt->setBlob(3, &ss2);
             stmnt->executeQuery();
             return;
         } catch(sql::SQLException& e){

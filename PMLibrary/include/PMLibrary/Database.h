@@ -3,19 +3,20 @@
 #include <mariadb/conncpp.hpp>
 #include <memory>
 #include <optional>
+#include <sstream>
 
 namespace PM{
     using std::cout;
     using std::endl;
     using std::string;
     using sqlQuery = std::unique_ptr<sql::PreparedStatement>;
-    using userRecord = std::pair<bool, std::string>;
+    using userRecord = std::vector<std::string>;
 
     class DBConnection{
         public:
             DBConnection();
             userRecord queryUser(string username);
-            void registerUser(string username, string password);
+            void registerUser(string username, string password, string salt);
             std::vector<std::vector<std::string>> fetchPasswords(string username);
             void addPassword(string user, string website, string  webUsername, string webPassword);
         private:

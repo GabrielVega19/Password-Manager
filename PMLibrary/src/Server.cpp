@@ -73,15 +73,25 @@ namespace PM{
         }else if (authenticationStatus == "register"){
             // if user not registered in db then register them in the db 
             cout << "Registering User" << endl;
+            
+            // prompts user to reenter password for registration
             send("Please enter your password again to register yourself in the system.\n\n");
             string repeatPassword = syncRead();
             
-            if (repeatPassword == _password){
+            // ensures passwords match
+            CryptoPP::SHA256 hash;
+            repeatPassword = repeatPassword + _salt;
+            hash.Update((const CryptoPP::byte*)repeatPassword.data(), repeatPassword.size());
+            bool verified = hash.Verify((const CryptoPP::byte*)_password.data());
+            
+            if (verified){
+                // if they match then it registers the user 
                 registerUser();
                 cout << "Registered User." << endl;
                 send("Registration Successful. Welcome to the Secure Password Manager.\n");
                 serviceClient();
             }else{
+                // if they dont then close connection 
                 send("Passwords dont match please connect to the server and try again.");
                 _socket.close();
                 _errHandler();
@@ -105,23 +115,55 @@ namespace PM{
     }
 
     void TCPConnection::registerUser(){
-        _dbConnection->registerUser(_username, _password);
+        _dbConnection->registerUser(_username, _password, _salt);
     }
 
-    string TCPConnection::authenticateUser(){
+    string TCPConnection::authenticateUser(){        
+        // prepares the hashing algorithm code 
+        CryptoPP::SHA256 hash;
+        std::string hashedPassword;
+        hashedPassword.resize(hash.DigestSize());
+
+        // reads in two strings 
         string userUsername = syncRead();
         string userPassword = syncRead();
-        _username = userUsername;
-        _password = userPassword;
 
+        // sets username 
+        _username = userUsername;
+       
         userRecord result = _dbConnection->queryUser(userUsername);
-        if (result.first){
-            if (result.second == userPassword){
+        if (result[0] == "true"){
+            // sets salt in tcpConnection
+            _salt = result[2];
+            // salts and hashes password and sets in tcp object
+            userPassword = userPassword + _salt;
+            hash.Update((const CryptoPP::byte*)userPassword.data(), userPassword.size());
+            hash.Final((CryptoPP::byte*)&hashedPassword[0]);
+            _password = hashedPassword;
+
+            // ensures passwords match
+            hash.Update((const CryptoPP::byte*)userPassword.data(), userPassword.size());
+            bool verified = hash.Verify((const CryptoPP::byte*)result[1].data());
+            if (verified){
                 return "true";
             }else{
                 return "false";
             }
         }else{
+            // generate a salt and set it in the tcp server
+            const unsigned int BLOCKSIZE = 256;
+            CryptoPP::SecByteBlock scratch( BLOCKSIZE );
+            CryptoPP::AutoSeededRandomPool rng;
+            rng.GenerateBlock( scratch, scratch.size() );
+            string salt = std::move((char*)&scratch);
+            _salt = salt;
+
+            // salts and hashes password and sets in tcp object
+            userPassword = userPassword + _salt;
+            hash.Update((const CryptoPP::byte*)userPassword.data(), userPassword.size());
+            hash.Final((CryptoPP::byte*)&hashedPassword[0]);
+            _password = hashedPassword;
+
             return "register";
         }
     }

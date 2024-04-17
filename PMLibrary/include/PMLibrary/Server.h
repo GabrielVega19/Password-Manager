@@ -7,7 +7,9 @@
 #include <unordered_set>
 #include <boost/asio.hpp>
 #include <PMLibrary/Database.h>
-
+#include <cryptlib.h>
+#include <sha.h>
+#include <cryptopp/osrng.h>
 
 namespace PM{
     using boost::asio::ip::tcp;
@@ -38,6 +40,7 @@ namespace PM{
             std::string _name;
             std::string _username;
             std::string _password; 
+            std::string _salt;
             std::queue<std::string> _outgoingMsgs;
             boost::asio::streambuf _streamBuff {65536};
             msgHandler _msgHandler;
