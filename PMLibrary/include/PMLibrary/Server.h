@@ -10,6 +10,10 @@
 #include <cryptlib.h>
 #include <sha.h>
 #include <cryptopp/osrng.h>
+#include <pwdbased.h>
+#include <hex.h>
+#include <cryptopp/rijndael.h>
+#include <cryptopp/modes.h>
 
 namespace PM{
     using boost::asio::ip::tcp;
@@ -17,8 +21,11 @@ namespace PM{
     using std::cout;
     using std::endl;
     using std::string;
+    using CryptoPP::byte;
     using msgHandler = std::function<void(std::string)>;
     using errHandler = std::function<void()>;
+    using encryption = CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption;
+    using decryption = CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption;
 
     class TCPConnection : public std::enable_shared_from_this<TCPConnection>{
         public:
@@ -40,6 +47,7 @@ namespace PM{
             std::string _name;
             std::string _username;
             std::string _password; 
+            CryptoPP::SecByteBlock _aesKey;
             std::string _salt;
             std::queue<std::string> _outgoingMsgs;
             boost::asio::streambuf _streamBuff {65536};
@@ -49,6 +57,9 @@ namespace PM{
 
             explicit TCPConnection(tcp::socket&& socket, DBPointer dbConnection);
             string syncRead();
+            CryptoPP::SecByteBlock deriveAESKey(string pass, string salt);
+            string encrypt(string plaintext, CryptoPP::SecByteBlock iv);
+            string decrypt(string ciphertext, CryptoPP::SecByteBlock iv);
             void serviceClient();
             void registerUser();
             void onRead(error_code ec, size_t bLen);

@@ -17,7 +17,7 @@ int main(int, char**){
     };
 
     server.onClientMsg = [](const std::string& msg, PM::TCPConnection::TCPPointer tcpConn){
-        std::cout << "user has send the message: " << msg << std::endl;
+        std::cout << msg << std::endl;
     };
     
     std::cout << "running server" << std::endl;

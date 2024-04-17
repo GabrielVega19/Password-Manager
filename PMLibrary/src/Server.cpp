@@ -145,6 +145,8 @@ namespace PM{
             hash.Update((const CryptoPP::byte*)userPassword.data(), userPassword.size());
             bool verified = hash.Verify((const CryptoPP::byte*)result[1].data());
             if (verified){
+                _aesKey = deriveAESKey(userPassword, _salt);
+
                 return "true";
             }else{
                 return "false";
@@ -164,8 +166,34 @@ namespace PM{
             hash.Final((CryptoPP::byte*)&hashedPassword[0]);
             _password = hashedPassword;
 
+            _aesKey = deriveAESKey(userPassword, _salt);
             return "register";
         }
+    }
+
+    CryptoPP::SecByteBlock TCPConnection::deriveAESKey(string pass, string salt){
+        // derives the key for AES encryption of the user data
+        // sets up the password and salt in the format needed 
+        byte* testPassword = (byte*)pass.data();
+        size_t plen = strlen((const char*)testPassword);
+        byte* testSalt = (byte*)salt.data();
+        size_t slen = strlen((const char*)testSalt);
+
+        // sets up the memory for the derived key
+        byte testDerived[CryptoPP::SHA256::DIGESTSIZE];
+
+        // creates the object to derive the key
+        CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256> pbkdf;
+        byte unused = 0;
+
+        // derives the key
+        pbkdf.DeriveKey(testDerived, sizeof(testDerived), unused, testPassword, plen, testSalt, slen, 1024, 0.0f);
+
+        // converts the derived bytes for the key into a string 
+        return CryptoPP::SecByteBlock(testDerived, CryptoPP::SHA256::DIGESTSIZE);
+        // CryptoPP::HexEncoder encoder(new CryptoPP::StringSink(derivedKey));
+        // encoder.Put(testDerived, sizeof(testDerived));
+        // encoder.MessageEnd();
     }
 
     string TCPConnection::syncRead(){
@@ -179,14 +207,32 @@ namespace PM{
         return stringifyMsg.substr(0, (stringifyMsg.size() - 2));
     }
 
-
-    void TCPConnection::serviceClient(){
+    void TCPConnection::serviceClient(){       
         send("- Type 1 and then enter to add a password.\n- Type 2 and then enter to fetch passwords.\n\n");
 
         boost::asio::async_read_until(_socket, _streamBuff, "\n", [self=shared_from_this(), this](error_code ec, size_t bLen){            
             self->onRead(ec, bLen);
         });
     }
+
+    string TCPConnection::encrypt(string plaintext, CryptoPP::SecByteBlock iv){
+        std::string cipher;
+        encryption e;
+        e.SetKeyWithIV(_aesKey, _aesKey.size(), iv);
+        CryptoPP::StringSource s(plaintext, true, new CryptoPP::StreamTransformationFilter(e, new CryptoPP::StringSink(cipher)));
+
+        return cipher;
+    }
+
+    string TCPConnection::decrypt(string ciphertext, CryptoPP::SecByteBlock iv){
+        std::string plaintext;
+        decryption d;
+        d.SetKeyWithIV(_aesKey, _aesKey.size(), iv);
+        CryptoPP::StringSource s(ciphertext, true, new CryptoPP::StreamTransformationFilter(d, new CryptoPP::StringSink(plaintext)));
+
+        return plaintext;
+    }
+
     void TCPConnection::onRead(error_code ec, size_t bLen){
         if (ec){
             _socket.close();
@@ -202,6 +248,12 @@ namespace PM{
         _msgHandler(_username + ": " + stringifyMsg);
 
         if (stringifyMsg == "1"){ 
+            // generates an IV for encrypting the record
+            CryptoPP::AutoSeededRandomPool prng;
+            CryptoPP::SecByteBlock iv(CryptoPP::AES::BLOCKSIZE);
+            prng.GenerateBlock(iv, iv.size());
+            string ivString(reinterpret_cast<const char*>(iv.data()), iv.size());
+
             send("Website Link (ex. google.com): "); 
             string website = syncRead();
             send("Username (ex. gabriel@gmail.com): "); 
@@ -209,16 +261,19 @@ namespace PM{
             send("Password (ex. mypassword): ");
             string webPassword = syncRead();
 
-            _dbConnection->addPassword(_username, website, webUsername, webPassword);
+            
+            _dbConnection->addPassword(_username, encrypt(website, iv), encrypt(webUsername, iv), encrypt(webPassword, iv), ivString);
             send("Password Successfully registered.\n");
 
-        } else if(stringifyMsg == "2"){
+        } else if(stringifyMsg == "2"){           
             std::vector<std::vector<std::string>> passwords = _dbConnection->fetchPasswords(_username);
-            for (auto entry : passwords){
+            for (auto entry : passwords){                
+                CryptoPP::SecByteBlock iv(reinterpret_cast<const byte*>(&entry[4][0]), entry[4].size());
+
                 std::stringstream msgStream;
-                msgStream << "-" << entry[1] << std::endl; 
-                msgStream << "\t-username: " << entry[2] << std::endl;
-                msgStream << "\t-password: " << entry[3] << std::endl;
+                msgStream << "-" << decrypt(entry[1], iv) << std::endl; 
+                msgStream << "\t-username: " << decrypt(entry[2], iv) << std::endl;
+                msgStream << "\t-password: " << decrypt(entry[3], iv) << std::endl;
                 send(msgStream.str()); 
             }
         }else{
