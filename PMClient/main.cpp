@@ -1,49 +1,33 @@
+#include <PMLibrary/Client.h>
 #include <iostream>
-#include <PMLibrary/Server.h>
-#include <boost/asio.hpp>
-#include <array>
-
-using boost::asio::io_context;
-using boost::asio::ip::tcp;
-using boost::asio::connect;
-using boost::system::error_code;
-using std::array;
-using boost::asio::buffer;
-using boost::asio::error::eof;
-using std::endl;
+#include <thread>
 using std::cout;
-using std::cerr;
+using std::endl;
 
 int main(int argc, char* argv[]){
-    try{
-        io_context ioContext;
+    PM::TCPClient client("localhost", 6969);
 
-        tcp::resolver resolver { ioContext };
-        auto endpoints = resolver.resolve("localhost", "6969");
+    client.onMessage = [](const std::string& message){
+        cout << message;
+    };
 
-        tcp::socket socket {ioContext};
-        connect(socket, endpoints);
+    std::thread t([&client] {
+        client.run();
+    });
 
-        while(true){
-            array<char, 128> buf {};
-            error_code error;
+    while(true){
+        string msg;
+        getline(std::cin, msg);
 
-            size_t len = socket.read_some(buffer(buf), error);
+        if (msg == "quit")
+            break;
+        
+        msg += "\n";
 
-            if (error == eof){
-                break;
-            } else if (error){
-                throw boost::system::system_error(error);
-            }
-
-            cout.write(buf.data(), len);
-        }
-
-    } catch (std::exception& e){
-        cerr << e.what() << endl;
+        client.post(msg);
     }
 
-
-
+    client.stop();
+    t.join();
     return 0;
 }

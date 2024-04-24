@@ -204,7 +204,7 @@ namespace PM{
         msg << std::istream(&_streamBuff).rdbuf();
         std::string stringifyMsg = msg.str();
 
-        return stringifyMsg.substr(0, (stringifyMsg.size() - 2));
+        return stringifyMsg.substr(0, (stringifyMsg.size() - 1));
     }
 
     void TCPConnection::serviceClient(){       
@@ -244,7 +244,7 @@ namespace PM{
         std::stringstream msg;
         msg << std::istream(&_streamBuff).rdbuf();
         std::string stringifyMsg = msg.str();
-        stringifyMsg = stringifyMsg.substr(0, (stringifyMsg.size() - 2));
+        stringifyMsg = stringifyMsg.substr(0, (stringifyMsg.size() - 1));
         _msgHandler(_username + ": " + stringifyMsg);
 
         if (stringifyMsg == "1"){ 
