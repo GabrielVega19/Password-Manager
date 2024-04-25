@@ -88,6 +88,9 @@ namespace PM{
             boost::asio::io_context _ioContext;
             boost::asio::ssl::context _ctx{boost::asio::ssl::context::sslv23};
             ssl_socket _socket;
+            _ctx.set_verify_mode(boost::asio::ssl::verify_peer);
+            _ctx.load_verify_file("ca.pem");
+            
             tcp::acceptor _acceptor; 
             std::optional<tcp::socket> _socket;
             std::unordered_set<TCPConnection::TCPPointer> _connections {};
