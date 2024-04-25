@@ -7,13 +7,21 @@ namespace PM{
     }
 
     int TCPServer::run(){
-        try{
-            startAccept();
-            _ioContext.run();
-        }catch(std::exception& e){
-            std::cerr << e.what() << std::endl;
-            return -1;
-        }
+        boost::asio::async_connect(_socket.lowest_layer(), _endpoints, [this](error_code ec, tcp::endpoint ep){
+            _socket.handshake(ssl_socket::server);
+
+
+            if (!ec){
+                asyncRead();
+            }
+        });
+        //try{
+        //    startAccept();
+        //    _ioContext.run();
+        //}catch(std::exception& e){
+        //    std::cerr << e.what() << std::endl;
+        //    return -1;
+        //}
         return 0;
     }
 
