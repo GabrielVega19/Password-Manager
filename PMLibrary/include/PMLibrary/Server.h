@@ -14,6 +14,7 @@
 #include <hex.h>
 #include <cryptopp/rijndael.h>
 #include <cryptopp/modes.h>
+#include <boost/asio/ssl.hpp>
 
 namespace PM{
     using boost::asio::ip::tcp;
@@ -26,6 +27,7 @@ namespace PM{
     using errHandler = std::function<void()>;
     using encryption = CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption;
     using decryption = CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption;
+    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 
     class TCPConnection : public std::enable_shared_from_this<TCPConnection>{
         public:
