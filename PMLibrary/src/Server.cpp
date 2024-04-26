@@ -283,6 +283,7 @@ namespace PM{
 
     void TCPConnection::send(const std::string& msg){
         bool queueIdle = _outgoingMsgs.empty();
+
         _outgoingMsgs.push(msg);
         if (queueIdle){
             asyncWrite();
