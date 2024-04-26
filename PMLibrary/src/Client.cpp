@@ -1,17 +1,13 @@
 #include <PMLibrary/Client.h>
 
 namespace PM{
-    TCPClient::TCPClient(const string& address, int port): _socket(_ioContext, _ctx){
-
+    TCPClient::TCPClient(const string& address, int port): _socket(_ioContext){
         tcp::resolver resolver{_ioContext};
         _endpoints = resolver.resolve(address, std::to_string(port));
     }
 
     void TCPClient::run(){
-        boost::asio::async_connect(_socket.lowest_layer(), _endpoints, [this](error_code ec, tcp::endpoint ep){
-            _socket.handshake(ssl_socket::client);
-
-
+        boost::asio::async_connect(_socket, _endpoints, [this](error_code ec, tcp::endpoint ep){
             if (!ec){
                 asyncRead();
             }
@@ -23,7 +19,7 @@ namespace PM{
     void TCPClient::stop(){
         error_code ec;
 
-        _socket.lowest_layer().close(ec);
+        _socket.close(ec);
     }
 
     void TCPClient::post(const string& message){

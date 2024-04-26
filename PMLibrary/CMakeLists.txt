@@ -21,6 +21,4 @@ target_link_libraries(${PROJECT_NAME}
         ${Boost_LIBRARIES}
         libmariadbcpp.so
         /usr/local/lib/libcryptopp.a
-        /usr/lib/x86_64-linux-gnu/libcrypto.so
-        /usr/lib/x86_64-linux-gnu/libssl.so
 )

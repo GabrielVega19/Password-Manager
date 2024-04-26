@@ -2,7 +2,6 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <queue>
-#include <boost/asio/ssl.hpp>
 
 using std::string;
 using boost::system::error_code;
@@ -11,7 +10,6 @@ using boost::asio::io_context;
 using boost::asio::ip::tcp;
 using std::cout;
 using std::endl;
-typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 
 namespace PM{
 
@@ -27,8 +25,7 @@ namespace PM{
 
         private:
             io_context _ioContext{};
-            boost::asio::ssl::context _ctx{boost::asio::ssl::context::sslv23};
-            ssl_socket _socket;
+            tcp::socket _socket;
             tcp::resolver::results_type _endpoints;
             boost::asio::streambuf _streamBuf{65536};
             std::queue<string> _outgoingMessages{};
