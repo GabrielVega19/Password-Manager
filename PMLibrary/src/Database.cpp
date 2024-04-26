@@ -3,8 +3,8 @@
 namespace PM{
     DBConnection::DBConnection(){
         _driver = std::shared_ptr<sql::Driver>(sql::mariadb::get_driver_instance());
-        sql::SQLString url("jdbc:mariadb://localhost:3306/password_manager");
-        sql::Properties properties({{"user", "root"}, {"password", "T64bK&ULVWw81x88n%W7"}});
+        sql::SQLString url("jdbc:mariadb://localhost:3306/insert");
+        sql::Properties properties({{"user", "insert"}, {"password", "insert"}});
         _dbConn = std::shared_ptr<sql::Connection>(_driver->connect(url, properties));
     }
 
