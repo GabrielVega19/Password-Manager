@@ -4,6 +4,9 @@
 namespace PM{
     TCPServer::TCPServer(int port): _port(port), _acceptor(_ioContext, tcp::endpoint(tcp::v4(), _port)) {
         _dbConnection = std::shared_ptr<DBConnection>(new DBConnection());
+
+        _ctx.use_certificate_chain_file("/home/gabriel/Desktop/School-Shit/CN-Security/Password-Manager/certs/passwordmanager.crt");
+        _ctx.use_private_key_file("/home/gabriel/Desktop/School-Shit/CN-Security/Password-Manager/certs/passwordmanager.pem", boost::asio::ssl::context::pem);
     }
 
     int TCPServer::run(){
@@ -18,9 +21,9 @@ namespace PM{
     }
 
     void TCPServer::startAccept(){
-        _socket.emplace(_ioContext);
+        _socket.emplace(_ioContext, _ctx);
 
-        _acceptor.async_accept(*_socket, [this](const error_code& error){
+        _acceptor.async_accept((*_socket).lowest_layer(), [this](const error_code& error){
             auto conn = TCPConnection::create(std::move(*_socket), _dbConnection);
 
             if (onJoin){
@@ -50,15 +53,20 @@ namespace PM{
 
 
 
-    TCPConnection::TCPConnection(tcp::socket&& socket, DBPointer dbConnection) : _socket(std::move(socket)), _dbConnection(dbConnection){
+    TCPConnection::TCPConnection(ssl_socket&& socket, DBPointer dbConnection) : _socket(std::move(socket)), _dbConnection(dbConnection){
         error_code ec;
         std::stringstream name;
-        name << _socket.remote_endpoint();
+        name << _socket.lowest_layer().remote_endpoint();
 
         _name = name.str();
     }
     
     void TCPConnection::start(msgHandler&& msgHandler, errHandler&& errHandler){
+        _socket.async_handshake(boost::asio::ssl::stream_base::server, [](const boost::system::error_code &error){
+            if (error){
+                cout << error.what() << endl;
+            }
+        });
         _msgHandler = std::move(msgHandler);
         _errHandler = std::move(errHandler);
 
@@ -93,7 +101,7 @@ namespace PM{
             }else{
                 // if they dont then close connection 
                 send("Passwords dont match please connect to the server and try again.");
-                _socket.close();
+                _socket.lowest_layer().close();
                 _errHandler();
                 return;
             }
@@ -102,12 +110,12 @@ namespace PM{
             //dissconect the user for failing to authenticate to a registered user
             send("Authentication failed.");
             cout << "Authentication Failed." << endl;
-            _socket.close();
+            _socket.lowest_layer().close();
             _errHandler();
             return;
         }else{
             //throw an error something went wrong
-            _socket.close();
+            _socket.lowest_layer().close();
             _errHandler();
             return;
         }
@@ -209,10 +217,9 @@ namespace PM{
 
     void TCPConnection::serviceClient(){       
         send("- Type 1 and then enter to add a password.\n- Type 2 and then enter to fetch passwords.\n\n");
-
-        boost::asio::async_read_until(_socket, _streamBuff, "\n", [self=shared_from_this(), this](error_code ec, size_t bLen){            
-            self->onRead(ec, bLen);
-        });
+        
+        string msg = syncRead();
+        onRead(msg);
     }
 
     string TCPConnection::encrypt(string plaintext, CryptoPP::SecByteBlock iv){
@@ -233,32 +240,23 @@ namespace PM{
         return plaintext;
     }
 
-    void TCPConnection::onRead(error_code ec, size_t bLen){
-        if (ec){
-            _socket.close();
-
-            _errHandler();
-            return;
-        }
-
-        std::stringstream msg;
-        msg << std::istream(&_streamBuff).rdbuf();
-        std::string stringifyMsg = msg.str();
-        stringifyMsg = stringifyMsg.substr(0, (stringifyMsg.size() - 1));
+    void TCPConnection::onRead(string msg){        
+        string stringifyMsg = msg;
         _msgHandler(_username + ": " + stringifyMsg);
 
         if (stringifyMsg == "1"){ 
+            cout << "inside 1" << endl;
             // generates an IV for encrypting the record
             CryptoPP::AutoSeededRandomPool prng;
             CryptoPP::SecByteBlock iv(CryptoPP::AES::BLOCKSIZE);
             prng.GenerateBlock(iv, iv.size());
             string ivString(reinterpret_cast<const char*>(iv.data()), iv.size());
 
-            send("Website Link (ex. google.com): "); 
+            send("Website Link (ex. google.com): \n"); 
             string website = syncRead();
-            send("Username (ex. gabriel@gmail.com): "); 
+            send("Username (ex. gabriel@gmail.com): \n"); 
             string webUsername = syncRead();
-            send("Password (ex. mypassword): ");
+            send("Password (ex. mypassword): \n");
             string webPassword = syncRead();
 
             
@@ -286,7 +284,6 @@ namespace PM{
     void TCPConnection::send(const std::string& msg){
         bool queueIdle = _outgoingMsgs.empty();
         _outgoingMsgs.push(msg);
-
         if (queueIdle){
             asyncWrite();
         }

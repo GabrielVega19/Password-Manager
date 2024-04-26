@@ -16,7 +16,7 @@ namespace PM{
             if (res->next()) {
                 std::stringstream ss;
                 ss << res->getString(2);
-
+                    
                 std::stringstream ss2;
                 ss2 << res->getString(3);
                 userRecord result;

@@ -34,18 +34,15 @@ namespace PM{
             using TCPPointer = std::shared_ptr<TCPConnection>;
             using DBPointer = std::shared_ptr<DBConnection>;
 
-            static TCPPointer create(tcp::socket&& socket, DBPointer dbConnection){
+            static TCPPointer create(ssl_socket&& socket, DBPointer dbConnection){
                 return TCPPointer(new TCPConnection(std::move(socket), dbConnection));
             }
             
-            tcp::socket& socket(){
-                return _socket;
-            }
             void start(msgHandler&& msgHandler, errHandler&& errHandler);
             void send(const std::string& msg);
             inline const std::string& getUsername() const { return _name; }
         private:
-            tcp::socket _socket;
+            ssl_socket _socket;
             std::string _name;
             std::string _username;
             std::string _password; 
@@ -57,14 +54,14 @@ namespace PM{
             errHandler _errHandler;
             DBPointer _dbConnection;
 
-            explicit TCPConnection(tcp::socket&& socket, DBPointer dbConnection);
+            explicit TCPConnection(ssl_socket&& socket, DBPointer dbConnection);
             string syncRead();
             CryptoPP::SecByteBlock deriveAESKey(string pass, string salt);
             string encrypt(string plaintext, CryptoPP::SecByteBlock iv);
             string decrypt(string ciphertext, CryptoPP::SecByteBlock iv);
             void serviceClient();
             void registerUser();
-            void onRead(error_code ec, size_t bLen);
+            void onRead(string msg);
             void asyncWrite();
             void onWrite();
             string authenticateUser();
@@ -86,8 +83,9 @@ namespace PM{
         private:
             int _port;
             boost::asio::io_context _ioContext;
+            boost::asio::ssl::context _ctx{boost::asio::ssl::context::sslv23};
             tcp::acceptor _acceptor; 
-            std::optional<tcp::socket> _socket;
+            std::optional<ssl_socket> _socket;
             std::unordered_set<TCPConnection::TCPPointer> _connections {};
             std::shared_ptr<DBConnection> _dbConnection;
             
